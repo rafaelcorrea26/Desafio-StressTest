@@ -119,6 +119,20 @@ func TestRunContaTimeout(t *testing.T) {
 	assert.Equal(t, 4, report.Errors["timeout"])
 }
 
+func TestRunContaTimeoutNoMeioDoCorpo(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.(http.Flusher).Flush()
+		time.Sleep(200 * time.Millisecond)
+	}))
+	defer server.Close()
+
+	report := Run(context.Background(), Config{URL: server.URL, Requests: 4, Concurrency: 2, Timeout: 20 * time.Millisecond})
+
+	assert.Equal(t, 0, report.Status200())
+	assert.Equal(t, 4, report.Errors["timeout"])
+}
+
 func TestRunParaQuandoOContextoECancelado(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		time.Sleep(50 * time.Millisecond)

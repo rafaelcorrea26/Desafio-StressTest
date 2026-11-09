@@ -98,7 +98,9 @@ func doRequest(ctx context.Context, client *http.Client, url string) result {
 	defer res.Body.Close()
 
 	// lê o corpo até o fim pra conexão poder ser reaproveitada pelo próximo request
-	io.Copy(io.Discard, res.Body)
+	if _, err := io.Copy(io.Discard, res.Body); err != nil {
+		return result{duration: time.Since(start), err: err}
+	}
 
 	return result{status: res.StatusCode, duration: time.Since(start)}
 }

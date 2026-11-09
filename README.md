@@ -103,6 +103,11 @@ Uma observação sobre o `http://google.com`: ele responde com um redirect pra
 `www.google.com`, e o cliente HTTP do Go segue o redirect sozinho. Por isso o
 relatório mostra 200, que é o status da resposta final.
 
+Em volume alto, o Google pode limitar as requisições. Nesse caso, o relatório
+pode mostrar `429` ou falhas como `stopped after 10 redirects`, e a quantidade
+de respostas 200 varia entre as execuções. Para validar as contagens, use um
+serviço próprio.
+
 Apertar Ctrl+C no meio (ou dar `docker stop`) interrompe o teste, mas o
 relatório ainda é impresso com o que deu tempo de rodar.
 

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"sort"
@@ -86,8 +87,13 @@ func (r *Report) Print(w io.Writer) {
 	if len(r.Errors) > 0 {
 		fmt.Fprintln(w)
 		fmt.Fprintln(w, "Falhas sem resposta HTTP:")
-		for msg, qtd := range r.Errors {
-			fmt.Fprintf(w, "  %-30s %d\n", msg, qtd)
+		msgs := make([]string, 0, len(r.Errors))
+		for msg := range r.Errors {
+			msgs = append(msgs, msg)
+		}
+		sort.Strings(msgs)
+		for _, msg := range msgs {
+			fmt.Fprintf(w, "  %-30s %d\n", msg, r.Errors[msg])
 		}
 	}
 	fmt.Fprintln(w, "===========================================")
@@ -104,15 +110,24 @@ func (r *Report) totalErrors() int {
 // agrupa os erros por tipo, senão cada mensagem viria com a porta local diferente
 // e o relatório viraria uma lista enorme
 func describeError(err error) string {
-	var urlErr *url.Error
-	if errors.As(err, &urlErr) && urlErr.Timeout() {
+	var netErr net.Error
+	if errors.As(err, &netErr) && netErr.Timeout() {
 		return "timeout"
 	}
 	if errors.Is(err, context.Canceled) {
 		return "cancelado"
 	}
-	if errors.As(err, &urlErr) {
+	var dnsErr *net.DNSError
+	if errors.As(err, &dnsErr) {
+		return "DNS não resolvido"
+	}
+	var opErr *net.OpError
+	if errors.As(err, &opErr) {
 		return "falha de conexão"
+	}
+	var urlErr *url.Error
+	if errors.As(err, &urlErr) {
+		return urlErr.Err.Error() // ex.: stopped after 10 redirects
 	}
 	return "erro desconhecido"
 }
