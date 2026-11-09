@@ -1,0 +1,8 @@
+# binários compilados
+/stresstest
+/stresstest.exe
+/bin/
+
+# artefatos de teste
+*.out
+*.test
